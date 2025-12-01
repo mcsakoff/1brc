@@ -1,0 +1,23 @@
+= One Billion Row Challenge
+
+== Hardware
+
+CPU:: i7-10700F (Comet Lake)
+MB:: Gigabyte Z490 Aorus Elite
+RAM:: 64 GB (DDR4) - AMD Radeon R9 Gamer Series [R9S432G3206U2K] 32 ГБ x2
+
+== Results
+
+[%header,cols="2,1"]
+|===
+| Implementation                       | mean ± σ
+
+| Initial naive implementation         | 161.066 s ±  0.432 s
+|===
+
+== References
+
+- https://curiouscoding.nl/posts/1brc/
+- https://github.com/jonhoo/brrr
+- https://github.com/coriolinus/1brc
+- https://github.com/gunnarmorling/1brc

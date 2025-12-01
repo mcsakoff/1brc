@@ -1,0 +1,26 @@
+[package]
+name = "obrc"
+version = "0.1.0"
+edition = "2024"
+default-run = "obrc"
+
+[dependencies]
+anyhow = { version = "1.0", optional = true }
+rand = { version = "0.9", optional = true }
+rand_distr = { version = "0.5", optional = true }
+
+[features]
+generator = ["anyhow", "rand", "rand_distr"]
+
+[[bin]]
+name = "generate"
+required-features = ["generator"]
+
+[[bin]]
+name = "obrc"
+path = "src/main.rs"
+
+#[profile.release]
+#lto = "fat"
+#panic = "abort"
+#debug = true
