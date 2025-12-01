@@ -1,36 +1,39 @@
-use std::{
-    collections::HashMap,
-    fs::File,
-    io::{BufRead, BufReader},
-};
+use std::{collections::HashMap, fs::File, io::{BufRead, BufReader}};
 use std::collections::BTreeMap;
 
 struct Record {
-    min: f32,
-    max: f32,
-    sum: f32,
+    min: i16,
+    max: i16,
+    sum: i32,
     count: usize,
 }
 
 impl Record {
     fn default() -> Self {
         Self {
-            min: f32::MAX,
-            max: f32::MIN,
-            sum: 0.0,
+            min: i16::MAX,
+            max: i16::MIN,
+            sum: 0,
             count: 0,
         }
     }
 
-    fn add(&mut self, value: f32) {
+    fn add(&mut self, value: i16) {
         self.min = self.min.min(value);
         self.max = self.max.max(value);
-        self.sum += value;
+        self.sum += value as i32;
         self.count += 1;
     }
 
+    fn min(&self) -> f32 {
+        self.min as f32 / 10.0
+    }
+
+    fn max(&self) -> f32 {
+        self.max as f32 / 10.0
+    }
     fn avg(&self) -> f32 {
-        self.sum / self.count as f32
+        self.sum as f32 / self.count as f32 / 10.0
     }
 }
 
@@ -42,28 +45,53 @@ fn main() {
     let file = BufReader::new(file);
 
     // Read
-    let mut stats: HashMap<String, Record> = HashMap::new();
-    for line in file.lines() {
+    let mut stats: HashMap<Vec<u8>, Record> = HashMap::new();
+    for line in file.split(b'\n') {
         let line = line.unwrap();
-        let (city, temperature) = line.split_once(';').unwrap();
-        let city = city.to_string();
-        let temperature = temperature.parse::<f32>().unwrap();
+        let mut s = line.rsplitn(2, |v| *v == b';');
+        let temperature = parse_temperature(s.next().unwrap());
+        let city = s.next().unwrap().to_vec();
+        // println!("{}: {}", std::str::from_utf8(&city).unwrap(), temperature as f32 / 10.0);
         stats.entry(city).or_insert(Record::default()).add(temperature);
     }
 
     // Collect and sort
-    let stats: BTreeMap<String, Record> = stats.into_iter().collect();
+    let stats: BTreeMap<Vec<u8>, Record> = stats.into_iter().collect();
 
     // Output results
     print!("{{");
     let mut stats = stats.into_iter().peekable();
     while let Some((city, r)) = stats.next() {
-        print!("{city}={:.1}/{:.1}/{:.1}", r.min, r.avg(), r.max);
+        let city = unsafe { std::str::from_utf8_unchecked(&city) };
+        print!("{}={:.1}/{:.1}/{:.1}", city, r.min(), r.avg(), r.max());
         if stats.peek().is_some() {
             print!(", ");
         }
     }
     println!("}}");
+}
+
+fn parse_temperature(buf: &[u8]) -> i16 {
+    assert!(buf.len() >= 3);
+    assert!(buf.len() <= 5);
+
+    #[inline]
+    fn chr2num(b: &u8) -> i16 {
+        (*b - b'0') as i16
+    }
+
+    let (s, a, b, c ) = match buf {
+        // 2.3
+        [b, b'.', c] => (1, 0, chr2num(b), chr2num(c)),
+        // -2.3
+        [b'-', b, b'.', c] => (-1, 0, chr2num(b), chr2num(c)),
+        // 12.3
+        [a, b, b'.', c] => (1, chr2num(a), chr2num(b), chr2num(c)),
+        // -12.3
+        [b'-', a, b, b'.', c] => (-1, chr2num(a), chr2num(b), chr2num(c)),
+        _ => panic!("Invalid temperature format: '{}' ({:?})", String::from_utf8_lossy(buf), buf),
+    };
+    s * ((100 * a + 10 * b) + c)
 }
 
 #[cfg(test)]
@@ -73,12 +101,29 @@ mod tests {
     #[test]
     fn test_record() {
         let mut record = Record::default();
-        record.add(1.0);
-        record.add(2.0);
-        assert_eq!(record.min, 1.0);
-        assert_eq!(record.max, 2.0);
-        assert_eq!(record.sum, 3.0);
+        record.add(10);
+        record.add(20);
+        assert_eq!(record.min, 10);
+        assert_eq!(record.max, 20);
+        assert_eq!(record.sum, 30);
         assert_eq!(record.count, 2);
+        assert_eq!(record.min(), 1.0);
+        assert_eq!(record.max(), 2.0);
         assert_eq!(record.avg(), 1.5);
+    }
+
+    #[test]
+    fn test_parse_temperature() {
+        assert_eq!(parse_temperature(b"0.0"), 0);
+
+        assert_eq!(parse_temperature(b"0.1"), 1);
+        assert_eq!(parse_temperature(b"1.0"), 10);
+        assert_eq!(parse_temperature(b"10.0"), 100);
+        assert_eq!(parse_temperature(b"99.9"), 999);
+
+        assert_eq!(parse_temperature(b"-0.1"), -1);
+        assert_eq!(parse_temperature(b"-1.0"), -10);
+        assert_eq!(parse_temperature(b"-10.0"), -100);
+        assert_eq!(parse_temperature(b"-99.9"), -999);
     }
 }
