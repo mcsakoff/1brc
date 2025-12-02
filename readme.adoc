@@ -18,6 +18,7 @@ RAM:: 64 GB (DDR4) - AMD Radeon R9 Gamer Series [R9S432G3206U2K] 32 ГБ x2
 | Better hash function: fxhash         | 72.412 ±  0.278
 | Refactoring and optimizations        | 30.951 ±  0.180
 | Use memchr for line scan             | 29.211 ±  0.153
+| Parallelization                      | 3.229 ±  0.050
 |===
 
 == References
