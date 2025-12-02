@@ -6,6 +6,7 @@ default-run = "obrc"
 
 [dependencies]
 fxhash = "0.2"
+memchr = "2.7"
 memmap2 = "0.9"
 anyhow = { version = "1.0", optional = true }
 rand = { version = "0.9", optional = true }

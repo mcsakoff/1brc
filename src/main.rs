@@ -1,4 +1,5 @@
 use fxhash::FxBuildHasher;
+use memchr::memchr;
 use memmap2::{Advice, Mmap};
 use std::{collections::{BTreeMap, HashMap}, fs::File};
 
@@ -93,7 +94,7 @@ fn parse_line(data: &[u8]) -> (&[u8], i16, &[u8]) {
 
 #[inline]
 fn split_on(chr: u8, data: &[u8]) -> Option<(&[u8], &[u8])> {
-    match data.iter().position(|&c| c == chr) {
+    match memchr(chr, data) {
         None => None,
         Some(n) => unsafe {
             // SAFETY: returned index is guaranteed to be less than haystack.len().
