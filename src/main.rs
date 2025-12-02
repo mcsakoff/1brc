@@ -1,7 +1,6 @@
 use fxhash::FxBuildHasher;
 use memmap2::{Advice, Mmap};
-use std::collections::BTreeMap;
-use std::{collections::HashMap, fs::File};
+use std::{collections::{BTreeMap, HashMap}, fs::File};
 
 struct Record {
     min: i16,
@@ -11,12 +10,12 @@ struct Record {
 }
 
 impl Record {
-    fn default() -> Self {
+    fn new(value: i16) -> Self {
         Self {
-            min: i16::MAX,
-            max: i16::MIN,
-            sum: 0,
-            count: 0,
+            min: value,
+            max: value,
+            sum: value as i32,
+            count: 1,
         }
     }
 
@@ -47,19 +46,25 @@ fn main() {
 
     let mmap = unsafe { Mmap::map(&file).unwrap() };
     mmap.advise(Advice::Sequential).unwrap();
-    let data = &*mmap;
+    let mut data = &*mmap;
 
     // Read
     let mut stats: HashMap<Vec<u8>, Record, FxBuildHasher> = HashMap::with_capacity_and_hasher(1_000, FxBuildHasher::new());
-    for line in data.split(|v| *v == b'\n') {
-        if line.is_empty() {
-            continue; // handle EOF
+    loop {
+        if data.is_empty() {
+            break
         }
-        let mut s = line.rsplitn(2, |v| *v == b';');
-        let temperature = parse_temperature(s.next().unwrap());
-        let city = s.next().unwrap().to_vec();
+        let (city, temperature, rest) = parse_line(data);
         // println!("{}: {}", std::str::from_utf8(&city).unwrap(), temperature as f32 / 10.0);
-        stats.entry(city).or_insert(Record::default()).add(temperature);
+        match stats.get_mut(city) {
+            Some(r) => {
+                r.add(temperature);
+            }
+            None => {
+                stats.insert(city.to_vec(), Record::new(temperature));
+            }
+        }
+        data = rest;
     }
 
     // Collect and sort
@@ -76,6 +81,26 @@ fn main() {
         }
     }
     println!("}}");
+}
+
+/// Parse line into (city, temperature and rest data)
+#[inline]
+fn parse_line(data: &[u8]) -> (&[u8], i16, &[u8]) {
+    let (city, data) = split_on(b';', data).unwrap();
+    let (temperature, data) = split_on(b'\n', data).unwrap();
+    (city, parse_temperature(temperature), data)
+}
+
+#[inline]
+fn split_on(chr: u8, data: &[u8]) -> Option<(&[u8], &[u8])> {
+    match data.iter().position(|&c| c == chr) {
+        None => None,
+        Some(n) => unsafe {
+            // SAFETY: returned index is guaranteed to be less than haystack.len().
+            let (prefix, rest) = data.split_at_unchecked(n);
+            Some((prefix, &rest.get_unchecked(1..)))
+        }
+    }
 }
 
 fn parse_temperature(buf: &[u8]) -> i16 {
@@ -109,8 +134,7 @@ mod tests {
 
     #[test]
     fn test_record() {
-        let mut record = Record::default();
-        record.add(10);
+        let mut record = Record::new(10);
         record.add(20);
         assert_eq!(record.min, 10);
         assert_eq!(record.max, 20);

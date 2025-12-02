@@ -16,6 +16,7 @@ RAM:: 64 GB (DDR4) - AMD Radeon R9 Gamer Series [R9S432G3206U2K] 32 ГБ x2
 | Read as &[u8] and manual T parsing   | 144.172 ±  0.958
 | Memory mapped file                   | 82.906 ±  1.379
 | Better hash function: fxhash         | 72.412 ±  0.278
+| Refactoring and optimizations       | 30.951 ±  0.180
 |===
 
 == References
