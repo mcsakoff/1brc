@@ -10,10 +10,11 @@ RAM:: 64 GB (DDR4) - AMD Radeon R9 Gamer Series [R9S432G3206U2K] 32 ГБ x2
 
 [%header,cols="2,1"]
 |===
-| Implementation                       | mean ± σ
+| Implementation                       | mean ± σ, s
 
-| Initial naive implementation         | 161.066 s ±  0.432 s
-| Read as &[u8] and manual T parsing   | 144.172 s ±  0.958 s
+| Initial naive implementation         | 161.066 ±  0.432
+| Read as &[u8] and manual T parsing   | 144.172 ±  0.958
+| Memory mapped file                   | 82.906 ±  1.379
 |===
 
 == References

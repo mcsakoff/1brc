@@ -1,5 +1,6 @@
-use std::{collections::HashMap, fs::File, io::{BufRead, BufReader}};
+use memmap2::{Advice, Mmap};
 use std::collections::BTreeMap;
+use std::{collections::HashMap, fs::File};
 
 struct Record {
     min: i16,
@@ -42,12 +43,17 @@ const MEASUREMENTS_FILE_NAME: &str = "measurements.txt";
 fn main() {
     // Open
     let file = File::open(MEASUREMENTS_FILE_NAME).unwrap();
-    let file = BufReader::new(file);
+
+    let mmap = unsafe { Mmap::map(&file).unwrap() };
+    mmap.advise(Advice::Sequential).unwrap();
+    let data = &*mmap;
 
     // Read
     let mut stats: HashMap<Vec<u8>, Record> = HashMap::new();
-    for line in file.split(b'\n') {
-        let line = line.unwrap();
+    for line in data.split(|v| *v == b'\n') {
+        if line.is_empty() {
+            continue; // handle EOF
+        }
         let mut s = line.rsplitn(2, |v| *v == b';');
         let temperature = parse_temperature(s.next().unwrap());
         let city = s.next().unwrap().to_vec();
