@@ -1,3 +1,4 @@
+use fxhash::FxBuildHasher;
 use memmap2::{Advice, Mmap};
 use std::collections::BTreeMap;
 use std::{collections::HashMap, fs::File};
@@ -49,7 +50,7 @@ fn main() {
     let data = &*mmap;
 
     // Read
-    let mut stats: HashMap<Vec<u8>, Record> = HashMap::new();
+    let mut stats: HashMap<Vec<u8>, Record, FxBuildHasher> = HashMap::with_capacity_and_hasher(1_000, FxBuildHasher::new());
     for line in data.split(|v| *v == b'\n') {
         if line.is_empty() {
             continue; // handle EOF
@@ -86,6 +87,8 @@ fn parse_temperature(buf: &[u8]) -> i16 {
         (*b - b'0') as i16
     }
 
+    // Parse number -99.9 as
+    //              sab.c
     let (s, a, b, c ) = match buf {
         // 2.3
         [b, b'.', c] => (1, 0, chr2num(b), chr2num(c)),
