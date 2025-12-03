@@ -23,7 +23,7 @@ path = "src/main.rs"
 name = "generate"
 required-features = ["generator"]
 
-#[profile.release]
-#lto = "fat"
-#panic = "abort"
-#debug = true
+[profile.release]
+debug = "line-tables-only"
+lto = "fat"
+panic = "abort"
