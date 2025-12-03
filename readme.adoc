@@ -1,29 +1,41 @@
 = One Billion Row Challenge
+:icons: font
 
-== Hardware
+*Goal:* find out what results can be achieved without heavy low-level optimizations.
 
-CPU:: i7-10700F (Comet Lake)
-MB:: Gigabyte Z490 Aorus Elite
-RAM:: 64 GB (DDR4) - AMD Radeon R9 Gamer Series [R9S432G3206U2K] 32 ГБ x2
+*Rules:*
+
+  - Rust language;
+  - using of external libraries is advisable;
+  - optimizations that make the code unreadable or non-maintainable are not desirable;
+  - the solution must work for arbitrary dataset of the same format.
 
 == Results
 
-[%header,cols="2,1"]
-|===
-| Implementation                       | mean ± σ, s
+=== i7-10700F / 64GB (DDR4)
 
-| Initial naive implementation         | 161.066 ±  0.432
-| Read as &[u8] and manual T parsing   | 144.172 ±  0.958
-| Memory mapped file                   | 82.906 ±  1.379
-| Better hash function: fxhash         | 72.412 ±  0.278
-| Refactoring and optimizations        | 30.951 ±  0.180
-| Use memchr for line scan             | 29.211 ±  0.153
-| Parallelization                      | 3.229 ±  0.050
+[%header,cols="2,>1,1"]
+|===
+| Implementation                       | mean ± σ, s        | change, %
+
+| Initial naive implementation         | `161.066 ±  0.432` |
+| Read as &[u8] and manual T parsing   | `144.172 ±  0.958` | `-10.5%`
+| Memory mapped file                   | `82.906 ±  1.379`  | `-42.5%`
+| Better hash function: fxhash         | `72.412 ±  0.278`  | `-12.7%`
+| Refactoring and optimizations        | `30.951 ±  0.180`  | `-57.3%`
+| Use memchr for line scan             | `29.211 ±  0.153`  | `-5.6%`
+| Parallelization                      | `3.229 ±  0.050`   | `-88.9%`
 |===
 
 == References
 
-- https://curiouscoding.nl/posts/1brc/
-- https://github.com/jonhoo/brrr
-- https://github.com/coriolinus/1brc
+=== Blogs
+
+- link:https://www.morling.dev/blog/one-billion-row-challenge/[The One Billion Row Challenge] original blog post by _Gunnar Morling_, 2024
+- link:https://curiouscoding.nl/posts/1brc/[One Billion Row Challenge] in Rust by _Ragnar Groot Koerkamp_, 2024
+
+=== Sources
+
 - https://github.com/gunnarmorling/1brc
+- https://github.com/coriolinus/1brc
+- https://github.com/jonhoo/brrr
