@@ -1,10 +1,10 @@
 use fxhash::FxBuildHasher;
 use memchr::memchr;
 use memmap2::{Advice, Mmap};
-use std::num::NonZero;
 use std::{
     collections::{BTreeMap, HashMap},
     fs::File,
+    num::NonZero,
 };
 
 struct Record {
@@ -45,6 +45,7 @@ impl Record {
     fn max(&self) -> f32 {
         self.max as f32 / 10.0
     }
+
     fn avg(&self) -> f32 {
         self.sum as f32 / self.count as f32 / 10.0
     }
@@ -232,6 +233,18 @@ mod tests {
         assert_eq!(record.min(), 1.0);
         assert_eq!(record.max(), 2.0);
         assert_eq!(record.avg(), 1.5);
+    }
+
+    #[test]
+    fn test_records_merge() {
+        let mut record1 = Record::new(10);
+        record1.add(20);
+        let record2 = Record::new(30);
+        record1.merge(&record2);
+        assert_eq!(record1.min, 10);
+        assert_eq!(record1.max, 30);
+        assert_eq!(record1.sum, 60);
+        assert_eq!(record1.count, 3);
     }
 
     #[test]
